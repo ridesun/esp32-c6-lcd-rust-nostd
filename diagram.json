@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "editor": "wokwi",
+  "author": "Cool Dude",
+  "parts": [
+    {
+      "type": "board-esp32-c6-devkitc-1",
+      "id": "esp",
+      "top": 0,
+      "left": 0,
+      "attrs": {
+        "builder": "rust-nostd-esp"
+      }
+    },
+    {
+      "type": "wokwi-ili9341",
+      "id": "lcd1",
+      "top": -348.99,
+      "left": -375.2,
+      "rotate": 270,
+      "attrs": {
+        "flipVertical": "1"
+      }
+    }
+  ],
+  "connections": [
+    [
+      "esp:TX",
+      "$serialMonitor:RX",
+      "",
+      []
+    ],
+    [
+      "esp:RX",
+      "$serialMonitor:TX",
+      "",
+      []
+    ],
+    [
+      "esp:6",
+      "lcd1:MOSI",
+      "white"
+    ],
+    [
+      "esp:14",
+      "lcd1:CS",
+      "green"
+    ],
+    [
+      "esp:21",
+      "lcd1:RST",
+      "yellow"
+    ],
+    [
+      "esp:15",
+      "lcd1:D/C",
+      "purple"
+    ],
+    [
+      "esp:7",
+      "lcd1:SCK",
+      "blue"
+    ],
+    [
+      "esp:GND.1",
+      "lcd1:GND",
+      "black"
+    ],
+    [
+      "esp:3V3",
+      "lcd1:VCC",
+      "limegreen"
+    ],
+    [
+      "esp:22",
+      "lcd1:LED",
+      "black"
+    ]
+  ],
+  "serialMonitor": {
+    "display": "terminal",
+    "convertEol": true
+  }
+}

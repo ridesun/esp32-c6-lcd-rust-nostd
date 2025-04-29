@@ -1,0 +1,3 @@
+[submodule "ui/sui"]
+	path = ui/sui
+	url = https://github.com/Surrealism-All/SurrealismUI.git

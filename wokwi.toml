@@ -1,0 +1,4 @@
+[wokwi]
+version = 1
+elf = "target/riscv32imac-unknown-none-elf/release/esp32-c6-lcd-rust-nostd"
+firmware = "target/riscv32imac-unknown-none-elf/release/esp32-c6-lcd-rust-nostd"

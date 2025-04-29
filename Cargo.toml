@@ -1,0 +1,64 @@
+[package]
+name = "esp32-c6-lcd-rust-nostd"
+version = "0.1.0"
+authors = ["ridesun <ridesungg@gmail.com>"]
+edition = "2021"
+resolver = "2"
+rust-version = "1.77"
+
+[[bin]]
+name = "esp32-c6-lcd-rust-nostd"
+harness = false # do not use the built in cargo test harness -> resolve rust-analyzer errors
+
+[profile.release]
+codegen-units = 1        # LLVM can perform better optimizations using a single thread
+debug = 2
+debug-assertions = false
+incremental = false
+lto = 'fat'
+opt-level = 's'
+overflow-checks = false
+
+[profile.dev]
+debug = true    # Symbols are nice and they don't increase the size on Flash
+opt-level = "z"
+
+[profile.dev.package.esp-wifi]
+opt-level = 3
+
+[features]
+default = ["esp-hal/esp32c6", "esp-backtrace/esp32c6", "esp-println/esp32c6"]
+
+[dependencies]
+esp-backtrace = { version = "0.15.1", features = [
+    "exception-handler",
+    "panic-handler",
+    "println",
+]}
+
+esp-hal = {version = "1.0.0-beta.0",features = ["esp32c6","unstable"]}
+esp-println = { version = "0.13", features = [ "log"] }
+log = { version = "0.4.27" }
+
+esp-alloc = "0.7.0"
+embedded-graphics = "0.8.0"
+embedded-hal = "1.0.0"
+mipidsi = "0.9.0"
+embedded-graphics-core="*"
+embedded-hal-bus = "0.3.0"
+esp-wifi = {version = "0.13.0",features = ["esp32c6","log","esp-now","wifi"]}
+
+slint = { version = "*", default-features = false, features = [
+    "compat-1-2",
+    "renderer-software",
+    "unsafe-single-threaded",
+    "libm",
+] }
+
+esp-hal-smartled = { git = "https://github.com/esp-rs/esp-hal-community" ,features = ["esp32c6"]}
+smart-leds = "0.4.0"
+critical-section = "1.2.0"
+
+
+[build-dependencies]
+slint-build = "*"

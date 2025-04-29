@@ -1,0 +1,104 @@
+import { HorizontalBox, VerticalBox, AboutSlint } from "std-widgets.slint";
+import { SText, SButton, SProgress, SIcon } from "sui/index.slint";
+import { Themes } from "sui/use/index.slint";
+import { SCard } from "sui/src/card/index.slint";
+
+export global Datas {
+    in-out property <string> text: "Init......";
+    in-out property <int> selected-menu-item: 0;
+    callback menu-selected(int);
+    menu-selected(index) => {
+        if (index == 0) {
+            Datas.text = "Home Selected";
+        } else if (index == 1) {
+            Datas.text = "Settings Selected";
+        } else if (index == 2) {
+            Datas.text = "WiFi Selected";
+        } else if (index == 3) {
+            Datas.text = "Info Selected";
+        }
+    }
+    in-out property <bool> menu:true;
+}
+
+component MenuItem inherits Rectangle {
+    height: 30px;
+    width: 250px;
+    border-radius: 5px;
+
+    in property <string> text;
+    in property <bool> selected;
+    in property <int> index;
+    in property <Themes> theme: Themes.Primary;
+
+    background: selected ? gray : black;
+    animate background { duration: 150ms; }
+
+    SText {
+        text: parent.text;
+        color: selected ? white : antiquewhite;
+        font-size: 18px;
+        horizontal-alignment: TextHorizontalAlignment.center;
+        vertical-alignment: TextVerticalAlignment.center;
+        width: 100%;
+        height: 100%;
+    }
+}
+
+component EmbeddedMenu inherits Rectangle {
+
+    property <[string]> menu-items: ["Home", "Settings", "WiFi", "Info"];
+    in property <Themes> theme: Themes.Primary;
+
+    VerticalLayout {
+        spacing: 4px;
+        padding: 0px;
+        padding-left: 20px;
+
+        for item[index] in menu-items: MenuItem {
+            text: item;
+            selected: index == Datas.selected-menu-item;
+            index: index;
+            theme: theme;
+        }
+    }
+}
+
+export component HelloWorld inherits Window {
+    height: 172px;
+    width: 320px;
+    background: black;
+
+    VerticalLayout {
+        spacing: 5px;
+        padding: 5px;
+        alignment: LayoutAlignment.center;
+        visible: Datas.menu;
+
+        VerticalBox {
+            EmbeddedMenu {
+                theme: Themes.Primary;
+            }
+
+            SText {
+                horizontal-alignment: TextHorizontalAlignment.center;
+                text: Datas.text;
+                font-size: 10px;
+            }
+        }
+    }
+
+    VerticalLayout {
+        spacing: 5px;
+        padding: 5px;
+        alignment: LayoutAlignment.center;
+        visible: !Datas.menu;
+
+        VerticalBox {
+            SText {
+                horizontal-alignment: center;
+                text: Datas.menu ? "True" : "False";
+            }
+        }
+    }
+}
