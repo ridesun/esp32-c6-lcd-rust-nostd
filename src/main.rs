@@ -2,6 +2,7 @@
 #![no_main]
 
 mod display;
+mod led;
 mod slint_backend;
 
 extern crate alloc;
@@ -11,6 +12,7 @@ use esp_alloc as _;
 #[allow(unused_imports)]
 use esp_backtrace as _;
 
+use crate::led::BoardLed;
 use crate::slint_backend::DrawBuffer;
 use core::cell::RefCell;
 use core::iter::Cycle;
@@ -18,25 +20,20 @@ use core::ops::Range;
 use critical_section::Mutex;
 use esp_hal::esp_riscv_rt::entry;
 use esp_hal::gpio::{Input, InputConfig, Io, Pull};
-use esp_hal::rmt::Rmt;
-use esp_hal::time::Rate;
-use esp_hal::{handler, Config};
-use esp_hal_smartled::{smartLedBuffer, SmartLedsAdapter};
+use esp_hal::{Config, handler};
 use log::info;
-use smart_leds::hsv::{hsv2rgb, Hsv};
-use smart_leds::{brightness, gamma, SmartLedsWrite};
 
 // const SSID: &str = env!("SSID");
 // const PASSWORD: &str = env!("PASSWORD");
 // const STATIC_IP: &str = env!("STATIC_IP");
 // const GATEWAY_IP: &str = env!("GATEWAY_IP");
-static BUTTON: Mutex<RefCell<Option<MenuHandle>>> = Mutex::new(RefCell::new(None));
+static MENU_BUTTON: Mutex<RefCell<Option<MenuHandle>>> = Mutex::new(RefCell::new(None));
 
 slint::include_modules!();
 
 #[handler]
-fn handler() {
-    critical_section::with(|cs| BUTTON.borrow_ref_mut(cs).as_mut().unwrap().handler());
+fn menu_button_handler() {
+    critical_section::with(|cs| MENU_BUTTON.borrow_ref_mut(cs).as_mut().unwrap().handler());
 }
 
 #[entry]
@@ -48,16 +45,7 @@ fn main() -> ! {
 
     let led_pin = peripherals.GPIO8;
     let rmt = peripherals.RMT;
-    let rmt = Rmt::new(rmt, Rate::from_mhz(80)).unwrap();
-    let rmt_buffer = smartLedBuffer!(1);
-    let mut led = SmartLedsAdapter::new(rmt.channel0, led_pin, rmt_buffer);
-
-    let mut color = Hsv {
-        hue: 0,
-        sat: 255,
-        val: 255,
-    };
-    let mut hue = (0..=255).cycle();
+    let mut board_led = BoardLed::new(rmt, led_pin);
 
     let (window, display) = display::init_display();
     let mut buffer_provider = DrawBuffer {
@@ -66,26 +54,15 @@ fn main() -> ! {
     };
 
     let ui = HelloWorld::new().unwrap();
-    let strong = ui.clone_strong();
-    let strong2 = ui.clone_strong();
-    let timer1 = slint::Timer::default();
-    timer1.start(
-        slint::TimerMode::SingleShot,
-        core::time::Duration::from_millis(1000),
-        move || {
-            strong.global::<Datas>().set_text("Init Success".into());
-        },
-    );
+    let ui_strong = ui.clone_strong();
+    let datas = ui_strong.global::<Datas>();
 
-    let timer2 = slint::Timer::default();
-    timer2.start(
+    let timer_led = slint::Timer::default();
+    timer_led.start(
         slint::TimerMode::Repeated,
         core::time::Duration::from_millis(50),
         move || {
-            color.hue = hue.next().unwrap();
-
-            led.write(brightness(gamma([hsv2rgb(color)].iter().cloned()), 10))
-                .unwrap();
+            board_led.blink();
         },
     );
 
@@ -96,7 +73,7 @@ fn main() -> ! {
     let input_config = InputConfig::default().with_pull(Pull::Up);
 
     let mut io = Io::new(peripherals.IO_MUX);
-    io.set_interrupt_handler(handler);
+    io.set_interrupt_handler(menu_button_handler);
     let mut gpio9 = Input::new(peripherals.GPIO9, input_config);
     gpio9.listen(esp_hal::gpio::Event::FallingEdge);
     let menu_handle = MenuHandle {
@@ -104,18 +81,10 @@ fn main() -> ! {
         menu_index: 0,
         menu_range: (0..4).cycle(),
     };
-    critical_section::with(|cs| BUTTON.borrow_ref_mut(cs).replace(menu_handle));
+    critical_section::with(|cs| MENU_BUTTON.borrow_ref_mut(cs).replace(menu_handle));
 
     loop {
         slint::platform::update_timers_and_animations();
-        let menu_index =
-            critical_section::with(|cs| BUTTON.borrow_ref_mut(cs).as_mut().unwrap().menu());
-        strong2
-            .global::<Datas>()
-            .set_selected_menu_item(menu_index as i32);
-        strong2
-            .global::<Datas>()
-            .invoke_menu_selected(menu_index as i32);
         window.draw_if_needed(|renderer| {
             renderer.render_by_line(&mut buffer_provider);
         });
@@ -123,6 +92,12 @@ fn main() -> ! {
         if window.has_active_animations() {
             continue;
         }
+
+        let menu_index =
+            critical_section::with(|cs| MENU_BUTTON.borrow_ref_mut(cs).as_mut().unwrap().menu());
+
+        datas.set_selected_menu_item(menu_index as i32);
+        datas.invoke_menu_selected(menu_index as i32);
     }
 }
 

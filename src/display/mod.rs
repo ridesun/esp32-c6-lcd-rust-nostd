@@ -13,7 +13,7 @@ use esp_hal::rtc_cntl::Rtc;
 use esp_hal::spi::master::{Spi, SpiDmaBus};
 use esp_hal::time::Rate;
 use esp_hal::timer::timg::TimerGroup;
-use esp_hal::{dma_buffers, Blocking};
+use esp_hal::{Blocking, dma_buffers};
 use log::info;
 use mipidsi::interface::SpiInterface;
 use mipidsi::models::ST7789;
@@ -23,7 +23,7 @@ use slint::platform::software_renderer::MinimalSoftwareWindow;
 
 // --- Type Alias for the Concrete Display ---
 // Use the DMA-enabled SPI bus type.
-pub(crate) type MyDisplay = Display<
+pub type MyDisplay = Display<
     SpiInterface<
         'static,
         ExclusiveDevice<SpiDmaBus<'static, Blocking>, Output<'static>, Delay>,
@@ -33,7 +33,7 @@ pub(crate) type MyDisplay = Display<
     Output<'static>,
 >;
 
-pub(crate) fn init_display() -> (Rc<MinimalSoftwareWindow>, MyDisplay) {
+pub fn init_display() -> (Rc<MinimalSoftwareWindow>, MyDisplay) {
     let peripherals = unsafe { Peripherals::steal() };
     let window = MinimalSoftwareWindow::new(
         slint::platform::software_renderer::RepaintBufferType::ReusedBuffer,

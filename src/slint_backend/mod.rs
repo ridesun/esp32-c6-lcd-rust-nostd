@@ -4,11 +4,11 @@ use core::ops::Range;
 use esp_hal::timer::systimer::{SystemTimer, Unit};
 use slint::platform::software_renderer::MinimalSoftwareWindow;
 
-pub(crate) struct EspBackend {
+pub struct EspBackend {
     window: Rc<MinimalSoftwareWindow>,
 }
 impl EspBackend {
-    pub(crate) fn new(window: Rc<MinimalSoftwareWindow>) -> Self {
+    pub fn new(window: Rc<MinimalSoftwareWindow>) -> Self {
         Self { window }
     }
 }
@@ -34,7 +34,7 @@ impl slint::platform::Platform for EspBackend {
     }
 }
 
-pub(crate) struct DrawBuffer<'a, MyDisplay> {
+pub struct DrawBuffer<'a, MyDisplay> {
     pub display: MyDisplay,
     pub buffer: &'a mut [slint::platform::software_renderer::Rgb565Pixel],
 }

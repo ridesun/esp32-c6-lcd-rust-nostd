@@ -2,9 +2,8 @@
 name = "esp32-c6-lcd-rust-nostd"
 version = "0.1.0"
 authors = ["ridesun <ridesungg@gmail.com>"]
-edition = "2021"
+edition = "2024"
 resolver = "2"
-rust-version = "1.77"
 
 [[bin]]
 name = "esp32-c6-lcd-rust-nostd"
